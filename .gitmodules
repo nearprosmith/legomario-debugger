@@ -1,0 +1,3 @@
+[submodule "bluejelly"]
+	path = bluejelly
+	url = git@github.com:electricbaka/bluejelly.git
