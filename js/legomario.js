@@ -37,14 +37,62 @@ export default class LEGOMarioMessage {
         const hubPropertyOperation = LEGOMarioMessage.HubPropertyOperation[data[4]];
         switch (hubPropertyOperation) {
             case "Update (Upstream)":
-                switch (hubPropertyReference) {
-                    case "Advertising Name":
-                        return {
-                            value: String.fromCharCode(...data.slice(5, length))
-                        };
-                    default:
-                        throw new Error(`Sorry, This HubProperties Reference is still not supported;(`);
-                }
+                return {
+                    reference: hubPropertyReference,
+                    ...(() => {
+                        switch (hubPropertyReference) {
+                            case "Advertising Name":
+                            case "Manufacturer Name":
+                            case "Radio Firmware Version":
+                                return {
+                                    value: String.fromCharCode(...data.slice(5, length))
+                                };
+                            case "Button":
+                                return {
+                                    value: (data[5] === 0x01),
+                                };
+                            case "FW Version":
+                            case "HW Version":
+                                return {
+                                    ...VersionNumberDecoder.decode(data.slice(5, length).reverse())
+                                };
+                            case "RSSI":
+                                return {
+                                    value: uint2sint(data[5])
+                                };
+                            case "Battery Voltage":
+                                return {
+                                    value: data[5]
+                                };
+                            case "Battery Type":
+                                return {
+                                    value: (data[5] === 0x00) ? "Normal Battery" : "Rechargeable"
+                                };
+                            case "LEGO Wireless Protocol Version":
+                                return {
+                                    value: `${((data[6] & 0xf0) >>> 4) * 10 + (data[6] & 0x0f)}.${((data[5] & 0xf0) >>> 4) * 10 + (data[5] & 0x0f)}`
+                                };
+                            case "System Type ID":
+                                return {
+                                    value: (() => {
+                                        switch (data[5]) {
+                                            case 0x00:
+                                                return "LEGO Wedo 2.0";
+                                            case 0x01:
+                                                return "LEGO Duplo";
+                                            case 0x02:
+                                            case 0x03:
+                                                return "LEGO System";
+                                            default:
+                                                return "Unknown";
+                                        }
+                                    })(),
+                                };
+                            default:
+                                throw new Error(`Sorry, This HubProperties Reference is still not supported;(`);
+                        }
+                    })()
+                };
                 break;
             default:
                 throw new Error("Sorry, This Hub Properties Operation is still not supported.");
@@ -101,4 +149,29 @@ LEGOMarioMessage.HubPropertyOperation = {
     0x05: "Request Update (Downstream)",
     0x06: "Update (Upstream)"
 };
+export class VersionNumberDecoder {
+    static decode(data) {
+        const majorVersion = (data[0] & this.MAJOR_VERSION_BITMASK) >>> 4;
+        const minorVersion = (data[0] & this.MINOR_VERSION_BITMASK);
+        const bugfixNumber = ((data[1] & 0xf0) >>> 4) * 10 + (data[1] & 0x0f);
+        const buildNumber = ((data[2] & 0xf0) >>> 4) * 1000 + (data[2] & 0x0f) * 100 + ((data[3] & 0xf0) >>> 4) * 10 + (data[3] & 0x0f);
+        return {
+            version: `${majorVersion}.${minorVersion}.${bugfixNumber}.${buildNumber}`,
+            major: majorVersion,
+            minor: minorVersion,
+            bugfixNumber: bugfixNumber,
+            buildNumber: buildNumber
+        };
+    }
+}
+VersionNumberDecoder.MAJOR_VERSION_BITMASK = 0b01110000;
+VersionNumberDecoder.MINOR_VERSION_BITMASK = 0b00001111;
+function uint2sint(data) {
+    if ((data & 0x80) > 0) {
+        return -1 * (((data ^ 0xff) + 1) & 0xff);
+    }
+    else {
+        return data;
+    }
+}
 //# sourceMappingURL=legomario.js.map

@@ -144,9 +144,9 @@ export default class LEGOMarioMessage {
     const uint8Array = new Uint8Array(buffer);
     const messageType: MessageType = LEGOMarioMessage.MessageType[uint8Array[2]];
     let payload: Message = {};
-    switch(messageType){
+    switch (messageType) {
       case "Hub Properties":
-        return new LEGOMarioMessage("Hub Properties",buffer,LEGOMarioMessage.decodeHubPropertyMessage(uint8Array));
+        return new LEGOMarioMessage("Hub Properties", buffer, LEGOMarioMessage.decodeHubPropertyMessage(uint8Array));
     }
     return new LEGOMarioMessage(messageType, buffer, payload);
   }
@@ -155,22 +155,98 @@ export default class LEGOMarioMessage {
     if (LEGOMarioMessage.MessageType[data[2]] != "Hub Properties") {
       throw new Error("The message is not Hub Properties");
     }
-    const length:number = data[0];
+    const length: number = data[0];
     const hubPropertyReference = LEGOMarioMessage.HubPropertyReference[data[3]];
     const hubPropertyOperation = LEGOMarioMessage.HubPropertyOperation[data[4]];
-    switch(hubPropertyOperation){
+
+    switch (hubPropertyOperation) {
       case "Update (Upstream)":
-        switch (hubPropertyReference) {
-          case "Advertising Name":
-            return {
-              value: String.fromCharCode(...data.slice(5,length))
-            };　
-          default:
-            throw new Error(`Sorry, This HubProperties Reference is still not supported;(`);
+        return {
+          reference: hubPropertyReference,
+          ...(() => {
+            switch (hubPropertyReference) {
+              case "Advertising Name":
+              case "Manufacturer Name":
+              case "Radio Firmware Version":
+                return {
+                  value: String.fromCharCode(...data.slice(5, length))
+                }
+              case "Button":
+                return {
+                  value: (data[5] === 0x01),
+                }
+              case "FW Version":
+              case "HW Version":
+                return {
+                  ...VersionNumberDecoder.decode(data.slice(5, length).reverse())
+                }
+              case "RSSI":
+                return {
+                  value: uint2sint(data[5])
+                }
+              case "Battery Voltage":
+                return {
+                  value: data[5]
+                }
+              case "Battery Type":
+                return {
+                  value: (data[5] === 0x00)?"Normal Battery":"Rechargeable"
+                }
+              case "LEGO Wireless Protocol Version":
+                return {
+                  value: `${((data[6]&0xf0)>>>4)*10 + (data[6]&0x0f)}.${((data[5]&0xf0)>>>4)*10+(data[5]&0x0f)}`
+                }
+              case "System Type ID":
+                return {
+                  value: (() => {
+                    switch(data[5]){
+                      case 0x00:
+                        return "LEGO Wedo 2.0";
+                      case 0x01:
+                        return "LEGO Duplo";
+                      case 0x02:
+                      case 0x03:
+                        return "LEGO System";
+                      default:
+                        return "Unknown";
+                    }
+                  })(),
+                }
+              default:
+                throw new Error(`Sorry, This HubProperties Reference is still not supported;(`);
+            }
+          })()
         }
         break;
       default:
-        throw new  Error("Sorry, This Hub Properties Operation is still not supported.")
+        throw new Error("Sorry, This Hub Properties Operation is still not supported.")
     }
+  }
+}
+
+export class VersionNumberDecoder {
+  static readonly MAJOR_VERSION_BITMASK = 0b01110000;
+  static readonly MINOR_VERSION_BITMASK = 0b00001111;
+
+  static decode(data: Uint8Array) {
+    const majorVersion = (data[0] & this.MAJOR_VERSION_BITMASK) >>> 4;
+    const minorVersion = (data[0] & this.MINOR_VERSION_BITMASK);
+    const bugfixNumber = ((data[1] & 0xf0) >>> 4) * 10 + (data[1] & 0x0f);
+    const buildNumber = ((data[2] & 0xf0) >>> 4) * 1000 + (data[2] & 0x0f) * 100 + ((data[3] & 0xf0) >>> 4) * 10 + (data[3] & 0x0f);
+    return {
+      version: `${majorVersion}.${minorVersion}.${bugfixNumber}.${buildNumber}`,
+      major: majorVersion,
+      minor: minorVersion,
+      bugfixNumber: bugfixNumber,
+      buildNumber: buildNumber
+    }
+  }
+}
+
+function uint2sint(data:number){
+  if( (data & 0x80) > 0){
+    return -1 * (((data ^ 0xff)+1) & 0xff);
+  } else {
+    return data;
   }
 }
