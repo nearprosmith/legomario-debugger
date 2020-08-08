@@ -147,6 +147,8 @@ export default class LEGOMarioMessage {
     switch (messageType) {
       case "Hub Properties":
         return new LEGOMarioMessage("Hub Properties", buffer, LEGOMarioMessage.decodeHubPropertyMessage(uint8Array));
+      case "Hub Actions":
+        return new LEGOMarioMessage("Hub Actions", buffer, LEGOMarioMessage.decodeHubActionsMessage(uint8Array));
     }
     return new LEGOMarioMessage(messageType, buffer, payload);
   }
@@ -222,6 +224,17 @@ export default class LEGOMarioMessage {
         throw new Error("Sorry, This Hub Properties Operation is still not supported.")
     }
   }
+  static decodeHubActionsMessage(data:Uint8Array){
+    if (LEGOMarioMessage.MessageType[data[2]] != "Hub Actions") {
+      throw new Error("The message is not Hub Actions");
+    }
+    const length: number = data[0];
+    switch(data[3]){
+      case 0x30: return { value: 'Hub Will Switch Off' }
+      case 0x31: return { value: 'Hub Will Disconnect' }
+      case 0x32: return { value: 'Hub Will Go Into Boot Mode' }
+    }
+  }
 }
 
 export class VersionNumberDecoder {
@@ -234,7 +247,7 @@ export class VersionNumberDecoder {
     const bugfixNumber = ((data[1] & 0xf0) >>> 4) * 10 + (data[1] & 0x0f);
     const buildNumber = ((data[2] & 0xf0) >>> 4) * 1000 + (data[2] & 0x0f) * 100 + ((data[3] & 0xf0) >>> 4) * 10 + (data[3] & 0x0f);
     return {
-      version: `${majorVersion}.${minorVersion}.${bugfixNumber}.${buildNumber}`,
+      value: `${majorVersion}.${minorVersion}.${bugfixNumber}.${buildNumber}`,
       major: majorVersion,
       minor: minorVersion,
       bugfixNumber: bugfixNumber,

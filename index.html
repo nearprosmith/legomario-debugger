@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>LEGO Mario Debugger</title>
+  <link rel="stylesheet" href="./css/style.css" media="all"/>
   <script type="application/javascript" src="./bluejelly/src/bluejelly.js"></script>
 
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -18,20 +19,44 @@
 
     gtag('config', 'UA-174332879-1');
   </script>
+  <script src="./node_modules/vue/dist/vue.min.js" type="application/javascript"></script>
 </head>
 <body>
-<h1><img src="img/logo.png" alt="LEGO SUPER MARIO DEBUGGER"/></h1>
-<button id="scan">Scan</button>
-<button id="connect">Connect</button>
-<button id="regnotify">Reg Notify</button>
-<br/>
-<input type="text" id="op" style="width:20rem;"/>
-<button id="write">Write</button>
-<br/>
-<textarea id="log" style="width:50rem;height:50rem;">
-
-</textarea>
-
+<div id="app">
+  <div class="header">
+    <div class="container">
+      <h1><img src="img/logo.png" alt="LEGO SUPER MARIO DEBUGGER" style="max-height:120px;"/></h1>
+    </div>
+  </div>
+  <hr/>
+  <section>
+    <div class="container">
+      <div class="columns">
+        <div class="column is-one-third">
+          <div style="padding:1em 0;">
+            <button id="scan" class="button is-outlined">Scan</button>
+            <button id="connect" class="button is-outlined">Connect</button>
+            <button id="regnotify" class="button is-info">Reg Notify</button>
+          </div>
+          <div class="field has-addons">
+            <div class="control">
+              <input type="text" id="op" class="input is-medium is-inline-block" style="width:16rem"
+                     placeholder="Input hex code"/>
+            </div>
+            <div class="control">
+              <button id="write" class="button is-medium">Write</button>
+            </div>
+          </div>
+        </div>
+        <div class="column">
+          <h3 class="is-size-4">LEGO Mario Status</h3>
+        </div>
+      </div>
+      <hr/>
+      <textarea id="log" style="height:25rem;" class="textarea"></textarea>
+    </div>
+  </section>
+</div>
 <script type="module">
   import LEGOMarioMessage from './js/legomario.js';
 
@@ -69,7 +94,7 @@
     // console.log(btoa(data.buffer) );
     // if(btoa(data.buffer) === btoa(new Uint8Array(...['0x'])))
     const message = LEGOMarioMessage.decode(data.buffer);
-    console.log(message);
+    console.log(message.messageType, message.data);
     document.getElementById("log").value += '0x' + buf2hex(data.buffer).match(/.{2}/g).join(' ') + "\n";
   }
 

@@ -18,6 +18,10 @@
   },
   "homepage": "https://github.com/nearprosmith/legomario-web-ble#readme",
   "devDependencies": {
+    "bulma": "^0.9.0",
     "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "vue": "^2.6.11"
   }
 }
