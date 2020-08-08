@@ -1,0 +1,23 @@
+{
+  "name": "lego-mario-bluejelly",
+  "version": "1.0.0",
+  "description": "For debug LEGO Mario on Chrome(excluding iOS)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nearprosmith/legomario-web-ble.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nearprosmith/legomario-web-ble/issues"
+  },
+  "homepage": "https://github.com/nearprosmith/legomario-web-ble#readme",
+  "devDependencies": {
+    "typescript": "^3.9.7"
+  }
+}

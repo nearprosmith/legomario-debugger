@@ -9,7 +9,11 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-174332879-1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
     gtag('js', new Date());
 
     gtag('config', 'UA-174332879-1');
@@ -17,19 +21,36 @@
 </head>
 <body>
 <h1><img src="img/logo.png" alt="LEGO SUPER MARIO DEBUGGER"/></h1>
-<button id="scan" onclick="scan()">Scan</button>
-<button id="connect" onclick="connect()">Connect</button>
-<button id="regnotify" onclick="reg_notify()">Reg Notify</button><br />
-<input type="text" id="op" style="width:20rem;" /><button id="write" onclick="write_data()">Write</button><br />
+<button id="scan">Scan</button>
+<button id="connect">Connect</button>
+<button id="regnotify">Reg Notify</button>
+<br/>
+<input type="text" id="op" style="width:20rem;"/>
+<button id="write">Write</button>
+<br/>
 <textarea id="log" style="width:50rem;height:50rem;">
 
 </textarea>
 
-<script>
-  const ble = new BlueJelly();
+<script type="module">
+  import LEGOMarioMessage from './js/legomario.js';
 
+  const ble = new BlueJelly();
   window.onload = () => {
     ble.setUUID("LEGOMario", "00001623-1212-efde-1623-785feabcd123", "00001624-1212-efde-1623-785feabcd123");
+    document.getElementById('regnotify').addEventListener('click', () => {
+      ble.startNotify("LEGOMario");
+    });
+    document.getElementById('scan').addEventListener('click', () => {
+      ble.scan("LEGOMario");
+    });
+    document.getElementById('connect').addEventListener('click', () => {
+      ble.connectGATT("LEGOMario");
+    });
+    document.getElementById('write').addEventListener('click', () => {
+      const op = document.getElementById('op').value;
+      ble.write("LEGOMario", str2data(op));
+    });
   };
 
   ble.onScan = (uuid) => {
@@ -42,33 +63,27 @@
   ble.onStartNotify = (uuid) => {
     console.log(`Start Notify ${uuid}`);
   }
-  ble.onRead = (data,uuid) => {
-    console.log(`Read ${uuid}`);
-    console.log(data);
-    document.getElementById("log").value += '0x'+buf2hex(data.buffer).match(/.{2}/g).join(' ') + "\n";
-  }
-  ble.onWrite = (uuid) => {
-    document.getElementById("log").value += `Write: ${document.getElementById('op').value}\n`;
+  ble.onRead = (data, uuid) => {
+    // console.log(data);
+    // console.log(new Uint8Array(str2data("0f0004000147000000002001000000")) == new Uint8Array(data.buffer).toString());
+    // console.log(btoa(data.buffer) );
+    // if(btoa(data.buffer) === btoa(new Uint8Array(...['0x'])))
+    const message = LEGOMarioMessage.decode(data.buffer);
+    console.log(message);
+    document.getElementById("log").value += '0x' + buf2hex(data.buffer).match(/.{2}/g).join(' ') + "\n";
   }
 
-  const connect = () => {
-    ble.connectGATT("LEGOMario");
-  };
-  const scan = () =>{
-    ble.scan("LEGOMario");
-  }
-  const reg_notify = () => {
-    ble.startNotify("LEGOMario");
-  }
+
   const write_data = () => {
     const op = document.getElementById('op').value;
-    ble.write("LEGOMario",str2data(op));
+    ble.write("LEGOMario", str2data(op));
   }
 
   function buf2hex(buffer) { // buffer is an ArrayBuffer
     return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
   }
-  function str2data(str){
+
+  function str2data(str) {
     const segments = str.match(/.{2}/g);
     let code = new Array();
     for (let i = 0; i < segments.length; i++) {
