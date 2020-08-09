@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>LEGO Mario Debugger</title>
+  <title>LEGO Super Mario Debugger</title>
   <link rel="stylesheet" href="./css/style.css" media="all"/>
   <script type="application/javascript" src="./bluejelly/src/bluejelly.js"></script>
-
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-174332879-1"></script>
   <script>
@@ -23,12 +22,13 @@
 </head>
 <body>
 <div id="app">
-  <div class="header">
-    <div class="container">
-      <h1><img src="img/logo.png" alt="LEGO SUPER MARIO DEBUGGER" style="max-height:120px;"/></h1>
+  <section id="header" class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title is-size-1">LEGO® Super Mario™ Debugger</h1>
+      </div>
     </div>
-  </div>
-  <hr/>
+  </section>
   <section>
     <div class="container">
       <div class="columns">
@@ -53,14 +53,39 @@
         </div>
       </div>
       <hr/>
-      <textarea id="log" style="height:25rem;" class="textarea"></textarea>
+      <table class="table is-fullwidth is-striped" style="max-height:20rem;overflow-scrolling: auto;margin-bottom:1rem;">
+        <thead><tr><th>Time</th><th>Direction</th><th>Hex</th><th>MessageType</th><th>Data</th></tr></thead>
+        <tbody>
+        <tr v-for="item in logs" :key="item.hex">
+          <td>{{ item.time }}</td>
+          <td>{{ item.direction }}</td>
+          <td>{{ item.hex }}</td>
+          <td>{{ item.messageType }}</td>
+          <td>{{ item.data }}</td>
+        </tr>
+        </tbody>
+      </table>
     </div>
   </section>
+  <footer class="footer">
+    <div class="content has-text-centered">
+      <p>
+        <strong>LEGO® Super Mario™ Debugger</strong> by <a href="https://twitter.com/sarumonera">@sarumonera</a>
+      </p>
+    </div>
+  </footer>
 </div>
 <script type="module">
   import LEGOMarioMessage from './js/legomario.js';
-
   const ble = new BlueJelly();
+  const  vueData = {
+    logs: [],
+  };
+  const app = new Vue({
+    el: '#app',
+    data: vueData
+  });
+
   window.onload = () => {
     ble.setUUID("LEGOMario", "00001623-1212-efde-1623-785feabcd123", "00001624-1212-efde-1623-785feabcd123");
     document.getElementById('regnotify').addEventListener('click', () => {
@@ -95,7 +120,13 @@
     // if(btoa(data.buffer) === btoa(new Uint8Array(...['0x'])))
     const message = LEGOMarioMessage.decode(data.buffer);
     console.log(message.messageType, message.data);
-    document.getElementById("log").value += '0x' + buf2hex(data.buffer).match(/.{2}/g).join(' ') + "\n";
+    vueData.logs.unshift({
+      time: (new Date()).toISOString() ,
+      direction: 'Upstream',
+      hex:`0x${buf2hex(data.buffer).match(/.{2}/g).join(' ')}`,
+      messageType: message.messageType,
+      data: `${(message.data.reference==null)?'':message.data.reference+': '}${message.data.value}`
+    });
   }
 
 

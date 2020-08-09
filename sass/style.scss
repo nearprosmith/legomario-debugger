@@ -1,1 +1,25 @@
 @import "../node_modules/bulma/bulma.sass";
+
+#header{
+  background: #fdd716;
+}
+
+.custom-shape-divider-bottom-1596903636 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.custom-shape-divider-bottom-1596903636 svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 82px;
+}
+
+.custom-shape-divider-bottom-1596903636 .shape-fill {
+  fill: #FFFFFF;
+}

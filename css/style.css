@@ -7326,3 +7326,23 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
 .footer {
   background-color: #fafafa;
   padding: 3rem 1.5rem 6rem; }
+
+#header {
+  background: #fdd716; }
+
+.custom-shape-divider-bottom-1596903636 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0; }
+
+.custom-shape-divider-bottom-1596903636 svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 82px; }
+
+.custom-shape-divider-bottom-1596903636 .shape-fill {
+  fill: #FFFFFF; }
